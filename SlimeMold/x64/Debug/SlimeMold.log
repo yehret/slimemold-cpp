@@ -1,4 +1,5 @@
 ﻿  Source.cpp
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(22,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(22,32): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(21,32): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(28,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(28,32): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   SlimeMold.vcxproj -> D:\Projects\cpp\SlimeMold\x64\Debug\SlimeMold.exe

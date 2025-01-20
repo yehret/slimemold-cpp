@@ -3,22 +3,28 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <set>
+#include <ctime>
 
 const int GRID_SIZE = 50;
 const int CELL_SIZE = 20;
 
 struct Node {
     int x, y;
-    float cost;
+    float gCost, hCost, fCost;
     bool operator>(const Node& other) const {
-        return cost > other.cost;
+        return fCost > other.fCost;  // Priority queue needs the smallest fCost at the top
     }
 };
+
+float manhattanHeuristic(const sf::Vector2i& a, const sf::Vector2i& b) {
+    return std::abs(a.x - b.x) + std::abs(a.y - b.y);  // Manhattan distance
+}
 
 void drawGrid(sf::RenderWindow& window, const std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& end) {
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 2, CELL_SIZE - 2));
+            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 1, CELL_SIZE - 1));
             cell.setPosition(j * CELL_SIZE, i * CELL_SIZE);
             if (grid[i][j] == 1) {
                 cell.setFillColor(sf::Color::Black);  // Wall
@@ -48,22 +54,20 @@ std::vector<sf::Vector2i> getNeighbors(const sf::Vector2i& node, const std::vect
     std::vector<sf::Vector2i> directions = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
     for (auto& dir : directions) {
         sf::Vector2i neighbor = node + dir;
-        if (neighbor.x >= 0 && neighbor.y >= 0 && neighbor.x < GRID_SIZE && neighbor.y < GRID_SIZE) {
-            if (grid[neighbor.y][neighbor.x] == 0) {  // Check if not a wall
-                neighbors.push_back(neighbor);
-            }
+        if (neighbor.x >= 0 && neighbor.y >= 0 && neighbor.x < GRID_SIZE && neighbor.y < GRID_SIZE && grid[neighbor.y][neighbor.x] == 0) {
+            neighbors.push_back(neighbor);
         }
     }
     return neighbors;
 }
 
-
-void visualizeDijkstra(sf::RenderWindow& window, std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& end) {
+void visualizeAStar(sf::RenderWindow& window, std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& end) {
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
-    std::vector<std::vector<float>> cost(GRID_SIZE, std::vector<float>(GRID_SIZE, INFINITY));
+    std::vector<std::vector<float>> gCost(GRID_SIZE, std::vector<float>(GRID_SIZE, INFINITY));
     std::vector<std::vector<sf::Vector2i>> prev(GRID_SIZE, std::vector<sf::Vector2i>(GRID_SIZE, { -1, -1 }));
-    cost[start.y][start.x] = 0;
-    pq.push({ start.x, start.y, 0 });
+    gCost[start.y][start.x] = 0;
+
+    pq.push({ start.x, start.y, 0, manhattanHeuristic(start, end), manhattanHeuristic(start, end) });
 
     while (!pq.empty()) {
         Node current = pq.top();
@@ -73,11 +77,12 @@ void visualizeDijkstra(sf::RenderWindow& window, std::vector<std::vector<int>>& 
         if (currentPos == end) break;
 
         for (auto& neighbor : getNeighbors(currentPos, grid)) {
-            float newCost = cost[current.y][current.x] + 1;
-            if (newCost < cost[neighbor.y][neighbor.x]) {
-                cost[neighbor.y][neighbor.x] = newCost;
+            float tentativeGCost = gCost[current.y][current.x] + 1;  // Each move has a cost of 1
+            if (tentativeGCost < gCost[neighbor.y][neighbor.x]) {
+                gCost[neighbor.y][neighbor.x] = tentativeGCost;
+                float hCost = manhattanHeuristic(neighbor, end);
+                pq.push({ neighbor.x, neighbor.y, tentativeGCost, hCost, tentativeGCost + hCost });
                 prev[neighbor.y][neighbor.x] = currentPos;
-                pq.push({ neighbor.x, neighbor.y, newCost });
             }
         }
 
@@ -85,17 +90,15 @@ void visualizeDijkstra(sf::RenderWindow& window, std::vector<std::vector<int>>& 
         grid[current.y][current.x] = 2;  // Visited cell
         drawGrid(window, grid, start, end);  // Draw grid with updated cells
         window.display();  // Display the grid
-        sf::sleep(sf::milliseconds(5));  // Pause for visualization effect
+        sf::sleep(sf::milliseconds(20));  // Pause for visualization effect
     }
 
     // Trace back the path
     sf::Vector2i trace = end;
     while (trace != start && trace != sf::Vector2i(-1, -1)) {
-        if (trace.x < 0 || trace.x >= GRID_SIZE || trace.y < 0 || trace.y >= GRID_SIZE) break;  // Prevent out-of-bounds
         grid[trace.y][trace.x] = 3;  // Mark as part of the path
         trace = prev[trace.y][trace.x];
     }
-
 
     // Final visualization with path marked
     drawGrid(window, grid, start, end);
@@ -103,7 +106,10 @@ void visualizeDijkstra(sf::RenderWindow& window, std::vector<std::vector<int>>& 
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE), "Dijkstra Visualization");
+    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE), "A* Visualization");
+
+    // Seed the random number generator
+    std::srand(static_cast<unsigned>(std::time(0)));
 
     // Initialize the grid
     std::vector<std::vector<int>> grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
@@ -129,7 +135,7 @@ int main() {
                 }
                 else if (end == sf::Vector2i(-1, -1)) {
                     end = { x, y };
-                    visualizeDijkstra(window, grid, start, end);  // Start visualization when both start and end are selected
+                    visualizeAStar(window, grid, start, end);  // Start visualization when both start and end are selected
                 }
                 else {
                     // Reset the grid for a new run
