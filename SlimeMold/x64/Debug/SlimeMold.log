@@ -2,4 +2,24 @@
 D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(21,32): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
 D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(28,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(28,32): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,103): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,103): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,103): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,103): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,103): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,82): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,82): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,82): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,82): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(167,82): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,102): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,102): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,102): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,102): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,102): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,81): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,81): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,81): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,81): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(175,81): warning C4244:         ]
   SlimeMold.vcxproj -> D:\Projects\cpp\SlimeMold\x64\Debug\SlimeMold.exe

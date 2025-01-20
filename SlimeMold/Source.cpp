@@ -49,6 +49,20 @@ void drawGrid(sf::RenderWindow& window, const std::vector<std::vector<int>>& gri
     }
 }
 
+void drawButtons(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape& startButton, sf::RectangleShape& stopButton) {
+    sf::Text startText("Start", font, 20);
+    startText.setFillColor(sf::Color::White);
+    startText.setPosition(startButton.getPosition().x + 10, startButton.getPosition().y + 10);
+    window.draw(startButton);
+    window.draw(startText);
+
+    sf::Text stopText("Stop", font, 20);
+    stopText.setFillColor(sf::Color::White);
+    stopText.setPosition(stopButton.getPosition().x + 10, stopButton.getPosition().y + 10);
+    window.draw(stopButton);
+    window.draw(stopText);
+}
+
 std::vector<sf::Vector2i> getNeighbors(const sf::Vector2i& node, const std::vector<std::vector<int>>& grid) {
     std::vector<sf::Vector2i> neighbors;
     std::vector<sf::Vector2i> directions = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
@@ -106,20 +120,32 @@ void visualizeAStar(sf::RenderWindow& window, std::vector<std::vector<int>>& gri
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE), "A* Visualization");
+    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE + 60), "A* Visualization with Buttons");
 
-    // Seed the random number generator
     std::srand(static_cast<unsigned>(std::time(0)));
-
-    // Initialize the grid
     std::vector<std::vector<int>> grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            if (rand() % 4 == 0) grid[i][j] = 1;  // Random walls
+            if (rand() % 4 == 0) grid[i][j] = 1;
         }
     }
 
     sf::Vector2i start(-1, -1), end(-1, -1);
+    sf::Font font;
+    if (!font.loadFromFile("Roboto.ttf")) {
+        std::cerr << "Error loading font\n";
+        return 1;
+    }
+
+    sf::RectangleShape startButton(sf::Vector2f(100, 40));
+    startButton.setPosition(10, GRID_SIZE * CELL_SIZE + 10);
+    startButton.setFillColor(sf::Color::Blue);
+
+    sf::RectangleShape stopButton(sf::Vector2f(100, 40));
+    stopButton.setPosition(120, GRID_SIZE * CELL_SIZE + 10);
+    stopButton.setFillColor(sf::Color::Red);
+
+    bool isVisualizing = false;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -130,29 +156,32 @@ int main() {
                 int x = event.mouseButton.x / CELL_SIZE;
                 int y = event.mouseButton.y / CELL_SIZE;
 
-                if (start == sf::Vector2i(-1, -1)) {
-                    start = { x, y };
-                }
-                else if (end == sf::Vector2i(-1, -1)) {
-                    end = { x, y };
-                    visualizeAStar(window, grid, start, end);  // Start visualization when both start and end are selected
-                }
-                else {
-                    // Reset the grid for a new run
-                    grid.assign(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
-                    for (int i = 0; i < GRID_SIZE; ++i) {
-                        for (int j = 0; j < GRID_SIZE; ++j) {
-                            if (rand() % 4 == 0) grid[i][j] = 1;
-                        }
+                if (y < GRID_SIZE && !isVisualizing) {
+                    if (start == sf::Vector2i(-1, -1)) {
+                        start = { x, y };
                     }
-                    start = { x, y };
-                    end = { -1, -1 };
+                    else if (end == sf::Vector2i(-1, -1)) {
+                        end = { x, y };
+                    }
+                }
+                else if (startButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                    std::cout << "Start button clicked!\n";
+                    if (start != sf::Vector2i(-1, -1) && end != sf::Vector2i(-1, -1)) {
+                        isVisualizing = true;
+                        visualizeAStar(window, grid, start, end);
+                        isVisualizing = false;
+                    }
+                }
+                else if (stopButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                    std::cout << "Stop button clicked!\n";
+                    // Stop functionality can be implemented here
                 }
             }
         }
 
         window.clear();
         drawGrid(window, grid, start, end);
+        drawButtons(window, font, startButton, stopButton);
         window.display();
     }
 
