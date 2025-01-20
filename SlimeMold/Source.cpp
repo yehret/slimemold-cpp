@@ -49,18 +49,18 @@ void drawGrid(sf::RenderWindow& window, const std::vector<std::vector<int>>& gri
     }
 }
 
-void drawButtons(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape& startButton, sf::RectangleShape& stopButton) {
+void drawButtons(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape& startButton, sf::RectangleShape& resetButton) {
     sf::Text startText("Start", font, 20);
     startText.setFillColor(sf::Color::White);
     startText.setPosition(startButton.getPosition().x + 10, startButton.getPosition().y + 10);
     window.draw(startButton);
     window.draw(startText);
 
-    sf::Text stopText("Stop", font, 20);
-    stopText.setFillColor(sf::Color::White);
-    stopText.setPosition(stopButton.getPosition().x + 10, stopButton.getPosition().y + 10);
-    window.draw(stopButton);
-    window.draw(stopText);
+    sf::Text resetText("Reset", font, 20);
+    resetText.setFillColor(sf::Color::Black);
+    resetText.setPosition(resetButton.getPosition().x + 10, resetButton.getPosition().y + 10);
+    window.draw(resetButton);
+    window.draw(resetText);
 }
 
 std::vector<sf::Vector2i> getNeighbors(const sf::Vector2i& node, const std::vector<std::vector<int>>& grid) {
@@ -141,9 +141,9 @@ int main() {
     startButton.setPosition(10, GRID_SIZE * CELL_SIZE + 10);
     startButton.setFillColor(sf::Color::Blue);
 
-    sf::RectangleShape stopButton(sf::Vector2f(100, 40));
-    stopButton.setPosition(120, GRID_SIZE * CELL_SIZE + 10);
-    stopButton.setFillColor(sf::Color::Red);
+    sf::RectangleShape resetButton(sf::Vector2f(100, 40));
+    resetButton.setPosition(120, GRID_SIZE * CELL_SIZE + 10);
+    resetButton.setFillColor(sf::Color::White);
 
     bool isVisualizing = false;
 
@@ -172,16 +172,24 @@ int main() {
                         isVisualizing = false;
                     }
                 }
-                else if (stopButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
-                    std::cout << "Stop button clicked!\n";
-                    // Stop functionality can be implemented here
+                else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                    std::cout << "Reset button clicked!\n";
+                    // Reset logic: Clear start and end, and reset grid
+                    start = sf::Vector2i(-1, -1);
+                    end = sf::Vector2i(-1, -1);
+                    grid = std::vector<std::vector<int>>(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
+                    for (int i = 0; i < GRID_SIZE; ++i) {
+                        for (int j = 0; j < GRID_SIZE; ++j) {
+                            if (rand() % 4 == 0) grid[i][j] = 1;
+                        }
+                    }
                 }
             }
         }
 
         window.clear();
         drawGrid(window, grid, start, end);
-        drawButtons(window, font, startButton, stopButton);
+        drawButtons(window, font, startButton, resetButton);
         window.display();
     }
 
