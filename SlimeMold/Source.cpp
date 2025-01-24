@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cmath>
 #include <set>
-#include <ctime>
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -78,7 +77,8 @@ std::vector<sf::Vector2i> getNeighbors(const sf::Vector2i& node, const std::vect
     return neighbors;
 }
 
-void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& foodSource, std::atomic<bool>& pathfindingComplete) {
+// Pathfinding algorithm
+void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& foodSource, std::vector<sf::Vector2i>& finalPath) {
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
     std::vector<std::vector<float>> gCost(GRID_SIZE, std::vector<float>(GRID_SIZE, INFINITY));
     std::vector<std::vector<sf::Vector2i>> prev(GRID_SIZE, std::vector<sf::Vector2i>(GRID_SIZE, { -1, -1 }));
@@ -108,20 +108,25 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
         std::this_thread::sleep_for(std::chrono::milliseconds(20));  // Sleep for animation effect
     }
 
-    // Trace back the path
+    // Trace back the path with animation
     sf::Vector2i trace = foodSource;
-    while (trace != start && trace != sf::Vector2i(-1, -1)) {
-        grid[trace.y][trace.x] = 3;  // Mark as part of the path
-        trace = prev[trace.y][trace.x];
-    }
 
-    pathfindingComplete = true;  // Signal that the pathfinding is complete
+    while (trace != start && trace.x >= 0 && trace.y >= 0 && trace.x < GRID_SIZE && trace.y < GRID_SIZE) {
+        finalPath.push_back(trace);
+        trace = prev[trace.y][trace.x];
+        if (trace.x < 0 || trace.y < 0 || trace.x >= GRID_SIZE || trace.y >= GRID_SIZE) {
+            std::cerr << "Error: trace out of bounds!\n";
+            break;
+        }
+    }
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE + 60), "A* Visualization with Buttons");
+    sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE + 60), "Slime Mold by A* Visualization");
 
     std::srand(static_cast<unsigned>(std::time(0)));
+
+    // Creating walls on the grid
     std::vector<std::vector<int>> grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
@@ -131,12 +136,15 @@ int main() {
 
     sf::Vector2i start(-1, -1);
     std::vector<sf::Vector2i> foodSources;
+
+    // Loading font for the text components
     sf::Font font;
     if (!font.loadFromFile("Roboto.ttf")) {
         std::cerr << "Error loading font\n";
         return 1;
     }
 
+    // Drawing start and reset buttons in application
     sf::RectangleShape startButton(sf::Vector2f(100, 40));
     startButton.setPosition(10, GRID_SIZE * CELL_SIZE + 10);
     startButton.setFillColor(sf::Color::Blue);
@@ -148,6 +156,9 @@ int main() {
     bool isVisualizing = false;
     std::atomic<bool> pathfindingComplete(false);
 
+    std::vector<std::vector<sf::Vector2i>> allPaths;
+
+    // Main loop
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -157,6 +168,7 @@ int main() {
                 int x = event.mouseButton.x / CELL_SIZE;
                 int y = event.mouseButton.y / CELL_SIZE;
 
+                // Add start point and food sources
                 if (y < GRID_SIZE && !isVisualizing) {
                     if (start == sf::Vector2i(-1, -1)) {
                         start = { x, y };
@@ -167,12 +179,17 @@ int main() {
                 }
 
                 if (startButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
-                    isVisualizing = true;
-                    pathfindingComplete = false;
+                    if (start != sf::Vector2i(-1, -1) && !foodSources.empty()) {
+                        isVisualizing = true;
 
-                    // Start pathfinding for each food source asynchronously
-                    for (auto& foodSource : foodSources) {
-                        std::thread(&visualizeAStar, std::ref(grid), start, foodSource, std::ref(pathfindingComplete)).detach();
+                        std::thread([&]() {
+                            for (const auto& foodSource : foodSources) {
+                                std::vector<sf::Vector2i> path;
+                                visualizeAStar(grid, start, foodSource, path);
+                                allPaths.push_back(path);
+                            }
+                            pathfindingComplete = true;
+                            }).detach();
                     }
                 }
                 else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
@@ -184,6 +201,7 @@ int main() {
                     }
                     start = { -1, -1 };
                     foodSources.clear();
+                    allPaths.clear();
                     pathfindingComplete = false;
                 }
             }
@@ -194,6 +212,25 @@ int main() {
         drawButtons(window, font, startButton, resetButton);
 
         if (pathfindingComplete) {
+            for (int step = 0; step < GRID_SIZE * GRID_SIZE; ++step) {
+                bool anyUpdate = false;
+
+                for (const auto& path : allPaths) {
+                    if (step < path.size()) {
+                        sf::Vector2i pos = path[path.size() - 1 - step];
+                        grid[pos.y][pos.x] = 3;  // Mark as part of the path
+                        anyUpdate = true;
+                    }
+                }
+
+                if (!anyUpdate) break;
+
+                window.clear();
+                drawGrid(window, grid, start, foodSources);
+                drawButtons(window, font, startButton, resetButton);
+                window.display();
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
             isVisualizing = false;
         }
 
