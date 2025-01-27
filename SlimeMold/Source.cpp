@@ -86,12 +86,17 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
 
     pq.push({ start.x, start.y, 0, manhattanHeuristic(start, foodSource), manhattanHeuristic(start, foodSource) });
 
+    bool pathFound = false;
+
     while (!pq.empty()) {
         Node current = pq.top();
         pq.pop();
 
         sf::Vector2i currentPos(current.x, current.y);
-        if (currentPos == foodSource) break;
+        if (currentPos == foodSource) {
+            pathFound = true;
+            break;
+        }
 
         for (auto& neighbor : getNeighbors(currentPos, grid)) {
             float tentativeGCost = gCost[current.y][current.x] + 1;  // Each move has a cost of 1
@@ -108,18 +113,23 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
         std::this_thread::sleep_for(std::chrono::milliseconds(20));  // Sleep for animation effect
     }
 
+    if (!pathFound) {
+        std::cerr << "No valid path found to food source at: (" << foodSource.x << ", " << foodSource.y << ")\n";
+        return;
+    }
+
     // Trace back the path with animation
     sf::Vector2i trace = foodSource;
-
-    while (trace != start && trace.x >= 0 && trace.y >= 0 && trace.x < GRID_SIZE && trace.y < GRID_SIZE) {
-        finalPath.push_back(trace);
-        trace = prev[trace.y][trace.x];
+    while (trace != start) {
         if (trace.x < 0 || trace.y < 0 || trace.x >= GRID_SIZE || trace.y >= GRID_SIZE) {
-            std::cerr << "Error: trace out of bounds!\n";
+            std::cerr << "Error: trace out of bounds at (" << trace.x << ", " << trace.y << ")\n";
             break;
         }
+        finalPath.push_back(trace);
+        trace = prev[trace.y][trace.x];
     }
 }
+
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE + 60), "Slime Mold by A* Visualization");
@@ -187,9 +197,19 @@ int main() {
                                 std::vector<sf::Vector2i> path;
                                 visualizeAStar(grid, start, foodSource, path);
                                 allPaths.push_back(path);
+
+                                // Reset visited cells for the next pathfinding process
+                                for (int i = 0; i < GRID_SIZE; ++i) {
+                                    for (int j = 0; j < GRID_SIZE; ++j) {
+                                        if (grid[i][j] == 2) {
+                                            grid[i][j] = 0;
+                                        }
+                                    }
+                                }
                             }
                             pathfindingComplete = true;
                             }).detach();
+
                     }
                 }
                 else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
