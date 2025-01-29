@@ -7,6 +7,8 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
 
 const int GRID_SIZE = 50;
 const int CELL_SIZE = 20;
@@ -77,7 +79,18 @@ std::vector<sf::Vector2i> getNeighbors(const sf::Vector2i& node, const std::vect
     return neighbors;
 }
 
-// Pathfinding algorithm
+// Mutex and condition variable for synchronization
+std::mutex gridMutex;
+std::condition_variable cv;
+std::atomic<int> activeThreads(0);
+std::atomic<int> currentStep(0);
+int totalSteps = 0;
+
+// Global variables to track state of the pathfinding process
+std::atomic<bool> pathfindingComplete(false);
+std::vector<std::vector<sf::Vector2i>> allPaths;
+
+// Synchronized A* visualization
 void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const sf::Vector2i& foodSource, std::vector<sf::Vector2i>& finalPath) {
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
     std::vector<std::vector<float>> gCost(GRID_SIZE, std::vector<float>(GRID_SIZE, INFINITY));
@@ -108,8 +121,15 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
             }
         }
 
-        // Mark the current cell as visited
-        grid[current.y][current.x] = 2;  // Visited cell
+        // Synchronize visited cell marking (this part does NOT reset the visited cells)
+        {
+            std::unique_lock<std::mutex> lock(gridMutex);
+            grid[current.y][current.x] = 2;  // Mark as visited
+            ++totalSteps;
+        }
+
+        // Notify all threads and wait for synchronization
+        cv.notify_all();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));  // Sleep for animation effect
     }
 
@@ -118,7 +138,7 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
         return;
     }
 
-    // Trace back the path with animation
+    // Trace back the path
     sf::Vector2i trace = foodSource;
     while (trace != start) {
         if (trace.x < 0 || trace.y < 0 || trace.x >= GRID_SIZE || trace.y >= GRID_SIZE) {
@@ -130,6 +150,37 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
     }
 }
 
+
+// This will be called once when the Start button is clicked
+void startPathfinding(std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const std::vector<sf::Vector2i>& foodSources) {
+    std::vector<std::thread> threads;
+    allPaths.clear();  // Clear previous paths
+
+    // Start a thread for each food source
+    for (const auto& foodSource : foodSources) {
+        threads.push_back(std::thread([&, foodSource]() {
+            std::vector<sf::Vector2i> path;
+            visualizeAStar(grid, start, foodSource, path);
+            allPaths.push_back(path);
+
+            // Reset visited cells after processing each food source
+            //for (int i = 0; i < GRID_SIZE; ++i) {
+            //    for (int j = 0; j < GRID_SIZE; ++j) {
+            //        if (grid[i][j] == 2) {
+            //            grid[i][j] = 0;
+            //        }
+            //    }
+            //}
+            }));
+    }
+
+    // Wait for all threads to complete
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    pathfindingComplete = true;
+}
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE + 60), "Slime Mold by A* Visualization");
@@ -164,9 +215,6 @@ int main() {
     resetButton.setFillColor(sf::Color::White);
 
     bool isVisualizing = false;
-    std::atomic<bool> pathfindingComplete(false);
-
-    std::vector<std::vector<sf::Vector2i>> allPaths;
 
     // Main loop
     while (window.isOpen()) {
@@ -192,24 +240,8 @@ int main() {
                     if (start != sf::Vector2i(-1, -1) && !foodSources.empty()) {
                         isVisualizing = true;
 
-                        std::thread([&]() {
-                            for (const auto& foodSource : foodSources) {
-                                std::vector<sf::Vector2i> path;
-                                visualizeAStar(grid, start, foodSource, path);
-                                allPaths.push_back(path);
-
-                                // Reset visited cells for the next pathfinding process
-                                for (int i = 0; i < GRID_SIZE; ++i) {
-                                    for (int j = 0; j < GRID_SIZE; ++j) {
-                                        if (grid[i][j] == 2) {
-                                            grid[i][j] = 0;
-                                        }
-                                    }
-                                }
-                            }
-                            pathfindingComplete = true;
-                            }).detach();
-
+                        // Start the pathfinding process in a separate thread
+                        std::thread(&startPathfinding, std::ref(grid), start, std::ref(foodSources)).detach();
                     }
                 }
                 else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
@@ -232,6 +264,7 @@ int main() {
         drawButtons(window, font, startButton, resetButton);
 
         if (pathfindingComplete) {
+            // Animate the paths for all food sources simultaneously
             for (int step = 0; step < GRID_SIZE * GRID_SIZE; ++step) {
                 bool anyUpdate = false;
 
@@ -249,8 +282,9 @@ int main() {
                 drawGrid(window, grid, start, foodSources);
                 drawButtons(window, font, startButton, resetButton);
                 window.display();
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
+
             isVisualizing = false;
         }
 
