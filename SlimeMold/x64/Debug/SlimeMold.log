@@ -1,25 +1,25 @@
 ﻿  Source.cpp
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(25,32): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(32,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(32,32): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,98): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,98): warning C4244:         with
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,98): warning C4244:         [
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,98): warning C4244:             T=float
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,98): warning C4244:         ]
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,77): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,77): warning C4244:         with
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,77): warning C4244:         [
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,77): warning C4244:             T=float
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(239,77): warning C4244:         ]
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,103): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,103): warning C4244:         with
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,103): warning C4244:         [
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,103): warning C4244:             T=float
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,103): warning C4244:         ]
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,82): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,82): warning C4244:         with
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,82): warning C4244:         [
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,82): warning C4244:             T=float
-D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(247,82): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(26,32): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(33,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(33,32): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,98): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,98): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,98): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,98): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,98): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,77): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,77): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,77): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,77): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(259,77): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,103): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,103): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,103): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,103): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,103): warning C4244:         ]
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,82): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,82): warning C4244:         with
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,82): warning C4244:         [
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,82): warning C4244:             T=float
+D:\Projects\cpp\SlimeMold\SlimeMold\Source.cpp(267,82): warning C4244:         ]
   SlimeMold.vcxproj -> D:\Projects\cpp\SlimeMold\x64\Debug\SlimeMold.exe

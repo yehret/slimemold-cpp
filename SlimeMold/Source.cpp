@@ -9,6 +9,7 @@
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
+#include <random>
 
 const int GRID_SIZE = 50;
 const int CELL_SIZE = 20;
@@ -101,6 +102,10 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
 
     bool pathFound = false;
 
+    // Create a random number generator and a uniform distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
     while (!pq.empty()) {
         Node current = pq.top();
         pq.pop();
@@ -111,17 +116,31 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
             break;
         }
 
-        for (auto& neighbor : getNeighbors(currentPos, grid)) {
+        // Get neighbors
+        std::vector<sf::Vector2i> neighbors = getNeighbors(currentPos, grid);
+
+        // Apply randomness: occasionally pick a random neighbor instead of the best one
+        if (rand() % 100 < 20) { // 20% chance to pick a random neighbor
+            // Shuffle the neighbors randomly
+            std::shuffle(neighbors.begin(), neighbors.end(), gen);
+        }
+
+        // Add the neighbors to the priority queue with some randomness in heuristic
+        for (auto& neighbor : neighbors) {
+            float baseHeuristic = manhattanHeuristic(neighbor, foodSource);
+
+            // Randomly bias the heuristic to make the path less straight
+            float randomHeuristic = baseHeuristic + (rand() % 20 - 10);  // Randomly modify the heuristic by -10 to +10
+
             float tentativeGCost = gCost[current.y][current.x] + 1;  // Each move has a cost of 1
             if (tentativeGCost < gCost[neighbor.y][neighbor.x]) {
                 gCost[neighbor.y][neighbor.x] = tentativeGCost;
-                float hCost = manhattanHeuristic(neighbor, foodSource);
-                pq.push({ neighbor.x, neighbor.y, tentativeGCost, hCost, tentativeGCost + hCost });
+                pq.push({ neighbor.x, neighbor.y, tentativeGCost, randomHeuristic, tentativeGCost + randomHeuristic });
                 prev[neighbor.y][neighbor.x] = currentPos;
             }
         }
 
-        // Synchronize visited cell marking (this part does NOT reset the visited cells)
+        // Synchronize visited cell marking
         {
             std::unique_lock<std::mutex> lock(gridMutex);
             grid[current.y][current.x] = 2;  // Mark as visited
@@ -130,7 +149,7 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
 
         // Notify all threads and wait for synchronization
         cv.notify_all();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));  // Sleep for animation effect
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));  // Sleep for animation effect
     }
 
     if (!pathFound) {
@@ -149,6 +168,7 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
         trace = prev[trace.y][trace.x];
     }
 }
+
 
 
 // This will be called once when the Start button is clicked
