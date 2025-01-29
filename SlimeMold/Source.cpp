@@ -202,7 +202,7 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
 
         // Notify all threads and wait for synchronization
         cv.notify_all();
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));  // Sleep for animation effect
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));  // Sleep for animation effect
     }
 
     if (!pathFound) {
