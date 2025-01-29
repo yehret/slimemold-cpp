@@ -11,8 +11,9 @@
 #include <condition_variable>
 #include <random>
 
-const int GRID_SIZE = 50;
-const int CELL_SIZE = 20;
+const int GRID_SIZE = 70;
+const int CELL_SIZE = 15;
+const int RADIUS = 20;  // Radius of the circle for the border
 
 struct Node {
     int x, y;
@@ -26,44 +27,96 @@ float manhattanHeuristic(const sf::Vector2i& a, const sf::Vector2i& b) {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);  // Manhattan distance
 }
 
+std::vector<std::vector<sf::Color>> cellColors(GRID_SIZE, std::vector<sf::Color>(GRID_SIZE));
+
+void initializeGrid(std::vector<std::vector<int>>& grid) {
+    // Get the center of the grid
+    int centerX = GRID_SIZE / 2;
+    int centerY = GRID_SIZE / 2;
+
+    // Set the radius of the circle
+    int radius = GRID_SIZE * 0.555;
+
+    // Initialize grid with walls and empty spaces
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        for (int j = 0; j < GRID_SIZE; ++j) {
+            // Check if the current cell is inside the circle using the equation
+            int dx = j - centerX;
+            int dy = i - centerY;
+
+            if (dx * dx + dy * dy <= radius * radius) {
+                // Inside the circle: random chance to place walls
+                if (rand() % 100 < 20) {  // 20% chance for walls inside the circle
+                    grid[i][j] = 1;  // Wall
+                }
+                else {
+                    grid[i][j] = 0;  // Open space
+                }
+            }
+            else {
+                // Outside the circle: make walls
+                grid[i][j] = 1;  // Wall outside the circle
+            }
+        }
+    }
+
+    // Initialize colors for empty cells (those not walls)
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        for (int j = 0; j < GRID_SIZE; ++j) {
+            if (grid[i][j] == 0) {
+                // Random grayish color for empty spaces
+                int grayValue = rand() % 20 + 220;
+                cellColors[i][j] = sf::Color(grayValue, grayValue, grayValue - 20);
+            }
+        }
+    }
+}
+
 void drawGrid(sf::RenderWindow& window, const std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const std::vector<sf::Vector2i>& foodSources) {
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
-            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 1, CELL_SIZE - 1));
+            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 0.5, CELL_SIZE - 1));
             cell.setPosition(j * CELL_SIZE, i * CELL_SIZE);
+
+            // Draw based on the type of cell
             if (grid[i][j] == 1) {
                 cell.setFillColor(sf::Color::Black);  // Wall
             }
             else if (sf::Vector2i(j, i) == start) {
-                cell.setFillColor(sf::Color::Green);  // Start
+                cell.setFillColor(sf::Color(255, 162, 0));  // Start point
             }
             else if (std::find(foodSources.begin(), foodSources.end(), sf::Vector2i(j, i)) != foodSources.end()) {
-                cell.setFillColor(sf::Color::Red);    // Food sources
+                cell.setFillColor(sf::Color(250, 70, 20));  // Food sources
             }
             else if (grid[i][j] == 2) {
-                cell.setFillColor(sf::Color(200, 200, 0));  // Visited
+                int randValue = rand() % 10 + 200;
+                cell.setFillColor(sf::Color(randValue, randValue, 0)); // Visited cells
             }
             else if (grid[i][j] == 3) {
-                cell.setFillColor(sf::Color::Blue);  // Path
+                int randValue = rand() % 10 + 245;
+                cell.setFillColor(sf::Color(randValue, randValue, 0));  // Path
             }
             else {
-                cell.setFillColor(sf::Color::White);  // Empty
+                // Precomputed colors for empty spaces
+                cell.setFillColor(cellColors[i][j]);
             }
+
             window.draw(cell);
         }
     }
 }
 
+
 void drawButtons(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape& startButton, sf::RectangleShape& resetButton) {
-    sf::Text startText("Start", font, 20);
+    sf::Text startText("START", font, 20);
     startText.setFillColor(sf::Color::White);
-    startText.setPosition(startButton.getPosition().x + 10, startButton.getPosition().y + 10);
+    startText.setPosition(startButton.getPosition().x + 20, startButton.getPosition().y + 8);
     window.draw(startButton);
     window.draw(startText);
 
-    sf::Text resetText("Reset", font, 20);
+    sf::Text resetText("RESET", font, 20);
     resetText.setFillColor(sf::Color::Black);
-    resetText.setPosition(resetButton.getPosition().x + 10, resetButton.getPosition().y + 10);
+    resetText.setPosition(resetButton.getPosition().x + 20, resetButton.getPosition().y + 8);
     window.draw(resetButton);
     window.draw(resetText);
 }
@@ -169,7 +222,18 @@ void visualizeAStar(std::vector<std::vector<int>>& grid, const sf::Vector2i& sta
     }
 }
 
-
+void generateCircularWalls(std::vector<std::vector<int>>& grid, const sf::Vector2i& center, int radius) {
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        for (int j = 0; j < GRID_SIZE; ++j) {
+            // Calculate the distance from the center
+            int dx = i - center.y;
+            int dy = j - center.x;
+            if (std::sqrt(dx * dx + dy * dy) <= radius) {
+                grid[i][j] = 1;  // Wall inside the circle
+            }
+        }
+    }
+}
 
 // This will be called once when the Start button is clicked
 void startPathfinding(std::vector<std::vector<int>>& grid, const sf::Vector2i& start, const std::vector<sf::Vector2i>& foodSources) {
@@ -182,15 +246,6 @@ void startPathfinding(std::vector<std::vector<int>>& grid, const sf::Vector2i& s
             std::vector<sf::Vector2i> path;
             visualizeAStar(grid, start, foodSource, path);
             allPaths.push_back(path);
-
-            // Reset visited cells after processing each food source
-            //for (int i = 0; i < GRID_SIZE; ++i) {
-            //    for (int j = 0; j < GRID_SIZE; ++j) {
-            //        if (grid[i][j] == 2) {
-            //            grid[i][j] = 0;
-            //        }
-            //    }
-            //}
             }));
     }
 
@@ -200,6 +255,7 @@ void startPathfinding(std::vector<std::vector<int>>& grid, const sf::Vector2i& s
     }
 
     pathfindingComplete = true;
+    std::cout << "Paths have been found\n";
 }
 
 int main() {
@@ -207,13 +263,9 @@ int main() {
 
     std::srand(static_cast<unsigned>(std::time(0)));
 
-    // Creating walls on the grid
+    // Create the grid and set walls and empty spaces
     std::vector<std::vector<int>> grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            if (rand() % 4 == 0) grid[i][j] = 1;
-        }
-    }
+    initializeGrid(grid);  // Call the new function to initialize grid and walls
 
     sf::Vector2i start(-1, -1);
     std::vector<sf::Vector2i> foodSources;
@@ -225,10 +277,10 @@ int main() {
         return 1;
     }
 
-    // Drawing start and reset buttons in application
+    // Drawing start and reset buttons in the application
     sf::RectangleShape startButton(sf::Vector2f(100, 40));
     startButton.setPosition(10, GRID_SIZE * CELL_SIZE + 10);
-    startButton.setFillColor(sf::Color::Blue);
+    startButton.setFillColor(sf::Color(76, 158, 0));
 
     sf::RectangleShape resetButton(sf::Vector2f(100, 40));
     resetButton.setPosition(120, GRID_SIZE * CELL_SIZE + 10);
@@ -250,13 +302,16 @@ int main() {
                 if (y < GRID_SIZE && !isVisualizing) {
                     if (start == sf::Vector2i(-1, -1)) {
                         start = { x, y };
+                        std::cout << "Start has been placed at: (" << x << ", " << y << ")\n";
                     }
                     else {
                         foodSources.push_back({ x, y });
+                        std::cout << "Food source has been placed at: (" << x << ", " << y << ")\n";
                     }
                 }
 
                 if (startButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                    std::cout << "Start button has been pressed. Starting!\n";
                     if (start != sf::Vector2i(-1, -1) && !foodSources.empty()) {
                         isVisualizing = true;
 
@@ -264,13 +319,11 @@ int main() {
                         std::thread(&startPathfinding, std::ref(grid), start, std::ref(foodSources)).detach();
                     }
                 }
-                else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                else if (resetButton.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y) && !isVisualizing) {
+                    std::cout << "Resetting the grid!\n";
+
                     grid = std::vector<std::vector<int>>(GRID_SIZE, std::vector<int>(GRID_SIZE, 0));
-                    for (int i = 0; i < GRID_SIZE; ++i) {
-                        for (int j = 0; j < GRID_SIZE; ++j) {
-                            if (rand() % 4 == 0) grid[i][j] = 1;
-                        }
-                    }
+                    initializeGrid(grid);  // Reinitialize the grid and walls
                     start = { -1, -1 };
                     foodSources.clear();
                     allPaths.clear();
@@ -285,6 +338,7 @@ int main() {
 
         if (pathfindingComplete) {
             // Animate the paths for all food sources simultaneously
+            std::cout << "Starting to draw paths\n";
             for (int step = 0; step < GRID_SIZE * GRID_SIZE; ++step) {
                 bool anyUpdate = false;
 
@@ -302,10 +356,12 @@ int main() {
                 drawGrid(window, grid, start, foodSources);
                 drawButtons(window, font, startButton, resetButton);
                 window.display();
-                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
             }
 
             isVisualizing = false;
+            pathfindingComplete = false;
+            std::cout << "Finish!\n";
         }
 
         window.display();
